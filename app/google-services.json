@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "773539581645",
+    "firebase_url": "https://switch-30a0d.firebaseio.com",
+    "project_id": "switch-30a0d",
+    "storage_bucket": "switch-30a0d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773539581645:android:6b71b3cbf2b9da89",
+        "android_client_info": {
+          "package_name": "com.switches"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773539581645-6e59pdqtjl0m489uq2cfl90ki6s611ve.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.switches",
+            "certificate_hash": "ad4cf14b5eac82aa5c6ac1b0aa3c0f8fe69256e7"
+          }
+        },
+        {
+          "client_id": "773539581645-0rqdbpitharsibe927gpgc645hjmdrr0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTl-xtA1hzvPs0hWjzdQSPL1c2JVibHlY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773539581645-njr5a64ll3fjdp9ggbo1vduphbi0ufsq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
