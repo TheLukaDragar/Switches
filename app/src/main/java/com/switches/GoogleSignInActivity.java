@@ -1,10 +1,22 @@
 package com.switches;
 
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.TranslateAnimation;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -29,6 +41,7 @@ public class GoogleSignInActivity extends BaseActivity implements
         View.OnClickListener {
 
     private static final String TAG = "GoogleActivity";
+    private String username="";
     private static final int RC_SIGN_IN = 9001;
 
     // [START declare_auth]
@@ -38,6 +51,10 @@ public class GoogleSignInActivity extends BaseActivity implements
     private GoogleSignInClient mGoogleSignInClient;
     private TextView mStatusTextView;
     private TextView mDetailTextView;
+    private TextView signintext;
+    private EditText nameed;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +62,11 @@ public class GoogleSignInActivity extends BaseActivity implements
         setContentView(R.layout.activity_google);
 
         // Views
-        mStatusTextView = findViewById(R.id.status);
-        mDetailTextView = findViewById(R.id.detail);
+      //  mStatusTextView = findViewById(R.id.status);
+      //  mDetailTextView = findViewById(R.id.detail);
+        signintext=findViewById(R.id.signin);
+        nameed=findViewById(R.id.editText);
+
 
         // Button listeners
         findViewById(R.id.signInButton).setOnClickListener(this);
@@ -67,6 +87,26 @@ public class GoogleSignInActivity extends BaseActivity implements
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
         // [END initialize_auth]
+        ObjectAnimator animY1 = ObjectAnimator.ofFloat(signintext, "translationY", -300f, 0f);
+        animY1.setDuration(1500);//1sec
+        animY1.setInterpolator(new BounceInterpolator());
+        animY1.setRepeatCount(0);
+        animY1.start();
+
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+        fadeIn.setDuration(1000);
+        findViewById(R.id.signInButton).startAnimation(fadeIn);
+
+
+
+
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.option_menu, menu); //your file name
+        return super.onCreateOptionsMenu(menu);
     }
 
     // [START on_start_check_user]
@@ -101,7 +141,9 @@ public class GoogleSignInActivity extends BaseActivity implements
                 updateUI(null);
                 // [END_EXCLUDE]
             }
+
         }
+
     }
     // [END onactivityresult]
 
@@ -119,9 +161,24 @@ public class GoogleSignInActivity extends BaseActivity implements
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
+
+
+
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             updateUI(user);
+
+                            Intent myIntent = new Intent(GoogleSignInActivity.this, MainActivity.class);
+                            if (user != null) {
+                                myIntent.putExtra("user_email", getString(R.string.google_status_fmt, user.getEmail()));
+                            }
+                            assert user != null;
+                            myIntent.putExtra("user_id",(getString(R.string.firebase_status_fmt, user.getUid())));//Optional parameters
+
+                            myIntent.putExtra("username",(username));//Optional parameters
+
+                            GoogleSignInActivity.this.startActivity(myIntent);
+
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -139,6 +196,16 @@ public class GoogleSignInActivity extends BaseActivity implements
 
     // [START signin]
     private void signIn() {
+
+        String namecheck = nameed.getText().toString();
+        if (namecheck.matches("")) {
+            Toast.makeText(this, "You did not enter a username", Toast.LENGTH_SHORT).show();
+            return;
+
+        }
+
+        username= nameed.getText().toString();
+
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -175,16 +242,28 @@ public class GoogleSignInActivity extends BaseActivity implements
     private void updateUI(FirebaseUser user) {
         hideProgressDialog();
         if (user != null) {
-            mStatusTextView.setText(getString(R.string.google_status_fmt, user.getEmail()));
-            mDetailTextView.setText(getString(R.string.firebase_status_fmt, user.getUid()));
+           // mStatusTextView.setText(getString(R.string.google_status_fmt, user.getEmail()));
+          //  mDetailTextView.setText(getString(R.string.firebase_status_fmt, user.getUid()));
+          //  signintext.setText("Logged in as"+getString(R.string.google_status_fmt, user.getEmail()));
+          //  TranslateAnimation anim = new TranslateAnimation(0, 0, 0, 100); //first 0 is start point, 150 is end point horizontal
+           // anim.setDuration(1000); // 1000 ms = 1second
 
-            findViewById(R.id.signInButton).setVisibility(View.GONE);
+
+
+
+           // findViewById(R.id.signInButton).setVisibility(View.GONE);
+           // ObjectAnimator animY = ObjectAnimator.ofFloat(findViewById(R.id.signInButton), "translationY", -100f, 0f);
+            //animY.setDuration(1000);//1sec
+            //animY.setInterpolator(new BounceInterpolator());
+           // animY.setRepeatCount(1);
+           // animY.start();
+
             //findViewById(R.id.signOutAndDisconnect).setVisibility(View.VISIBLE);
         } else {
-            mStatusTextView.setText(R.string.signed_out);
-            mDetailTextView.setText(null);
+            //mStatusTextView.setText(R.string.signed_out);
+           // mDetailTextView.setText(null);
 
-            findViewById(R.id.signInButton).setVisibility(View.VISIBLE);
+            //findViewById(R.id.signInButton).setVisibility(View.VISIBLE);
           //  findViewById(R.id.signOutAndDisconnect).setVisibility(View.GONE);
         }
     }
@@ -196,7 +275,24 @@ public class GoogleSignInActivity extends BaseActivity implements
             signIn();
         } //else if (i == R.id.signOutButton) {
           //  signOut();
-        } //else if (i == R.id.disconnectButton) {
+         //else if (i == R.id.disconnectButton) {
           //  revokeAccess();
        // }
     }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+
+        if (item.getItemId() == R.id.log_out){//your code
+            // EX : call intent if you want to swich to other activity
+            signOut();
+            
+            return true;
+            // case R.id.help:
+            //your code
+            //   return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+}
