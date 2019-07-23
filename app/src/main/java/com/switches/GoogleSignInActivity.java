@@ -132,30 +132,73 @@ public class GoogleSignInActivity extends BaseActivity implements
     }
 
     private void turnintologin() {
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+        fadeIn.setDuration(500);
+
        nameed.setVisibility(View.INVISIBLE);
         signintext.setText("Log In");
         register.setVisibility(View.VISIBLE);
         login.setVisibility(View.INVISIBLE);
         googlesingin.setText(getString(R.string.google_sign_in));
+        findViewById(R.id.signInButton).startAnimation(fadeIn);
+        register.startAnimation(fadeIn);
+        ObjectAnimator animY1 = ObjectAnimator.ofFloat(signintext, "translationY", -300f, 0f);
+        animY1.setDuration(1500);//1sec
+        animY1.setInterpolator(new BounceInterpolator());
+        animY1.setRepeatCount(0);
+        animY1.start();
 
         ignore=true;
 
     }
     public void Turninregister() {
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+        fadeIn.setDuration(500);
+
         nameed.setVisibility(View.VISIBLE);
         signintext.setText("Sign Up");
+        ObjectAnimator animY1 = ObjectAnimator.ofFloat(signintext, "translationY", -300f, 0f);
+        animY1.setDuration(1500);//1sec
+        animY1.setInterpolator(new BounceInterpolator());
+        animY1.setRepeatCount(0);
+        animY1.start();
+        ObjectAnimator animY2 = ObjectAnimator.ofFloat(nameed, "translationY", -300f, 0f);
+        animY2.setDuration(1500);//1sec
+        animY2.setInterpolator(new BounceInterpolator());
+        animY2.setRepeatCount(0);
+        animY2.start();
         register.setVisibility(View.INVISIBLE);
+
        login.setVisibility(View.VISIBLE);
+        login.startAnimation(fadeIn);
         googlesingin.setText(getString(R.string.google_sign_up));
+        findViewById(R.id.signInButton).startAnimation(fadeIn);
         ignore=false;
 
     }
     public void Turninregister2(View view) {
+        Animation fadeIn = new AlphaAnimation(0, 1);
+        fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+        fadeIn.setDuration(500);
         nameed.setVisibility(View.VISIBLE);
         signintext.setText("Sign Up");
+        ObjectAnimator animY1 = ObjectAnimator.ofFloat(signintext, "translationY", -300f, 0f);
+        animY1.setDuration(1500);//1sec
+        animY1.setInterpolator(new BounceInterpolator());
+        animY1.setRepeatCount(0);
+        animY1.start();
+        ObjectAnimator animY2 = ObjectAnimator.ofFloat(nameed, "translationY", -300f, 0f);
+        animY2.setDuration(1500);//1sec
+        animY2.setInterpolator(new BounceInterpolator());
+        animY2.setRepeatCount(0);
+        animY2.start();
         register.setVisibility(View.INVISIBLE);
         login.setVisibility(View.VISIBLE);
+        login.startAnimation(fadeIn);
         googlesingin.setText(getString(R.string.google_sign_up));
+        findViewById(R.id.signInButton).startAnimation(fadeIn);
         ignore=false;
 
     }
