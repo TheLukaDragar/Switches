@@ -18,10 +18,8 @@
             android:id="@+id/signInButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
-
             android:layout_centerInParent="true"
-            android:text="@string/google_sign_in"
+            android:text="@string/google_sign_up"
             app:isDarkTheme="false" />
 
         <TextView
@@ -34,7 +32,7 @@
             android:fontFamily="monospace"
             android:gravity="top|center_vertical"
             android:paddingBottom="40dp"
-            android:text="Sign In"
+            android:text="Sign Up"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textIsSelectable="false"
@@ -55,9 +53,39 @@
             android:maxLength="20"
             android:maxLines="1"
             android:textColor="@color/common_google_signin_btn_text_dark_default"
+            android:textColorHighlight="#76FF03"
+            android:textColorHint="#FFFFFF"
+            android:textColorLink="#2979FF"
             android:textSize="18sp"
             android:textStyle="bold"
             android:typeface="monospace" />
+
+        <Button
+            android:id="@+id/register"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/signInButton"
+            android:layout_centerHorizontal="true"
+            android:onClick="Turninregister2"
+            android:text="Register"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:typeface="monospace" />
+
+        <Button
+            android:id="@+id/login"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/signInButton"
+            android:layout_centerHorizontal="true"
+            android:onClick="turnintologin"
+            android:text="Already a user Log In"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:typeface="monospace"
+            android:visibility="invisible" />
 
 
     </RelativeLayout>

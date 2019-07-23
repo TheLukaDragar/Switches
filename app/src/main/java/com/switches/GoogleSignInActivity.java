@@ -2,7 +2,9 @@ package com.switches;
 
 import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.style.UpdateLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -14,6 +16,7 @@ import android.view.animation.Animation;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,6 +29,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthCredential;
@@ -33,6 +38,12 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Demonstrate Firebase Authentication using a Google ID Token.
@@ -41,7 +52,6 @@ public class GoogleSignInActivity extends BaseActivity implements
         View.OnClickListener {
 
     private static final String TAG = "GoogleActivity";
-    private String username="";
     private static final int RC_SIGN_IN = 9001;
 
     // [START declare_auth]
@@ -51,8 +61,13 @@ public class GoogleSignInActivity extends BaseActivity implements
     private GoogleSignInClient mGoogleSignInClient;
     private TextView mStatusTextView;
     private TextView mDetailTextView;
-    private TextView signintext;
-    private EditText nameed;
+    private TextView signintext=null;
+    private EditText nameed=null;
+    private Button register=null;
+    private Button login=null;
+    private Button googlesingin;
+    private String islogin="0";
+    private boolean ignore;
 
 
 
@@ -66,6 +81,17 @@ public class GoogleSignInActivity extends BaseActivity implements
       //  mDetailTextView = findViewById(R.id.detail);
         signintext=findViewById(R.id.signin);
         nameed=findViewById(R.id.editText);
+        register=findViewById(R.id.register);
+        login=findViewById(R.id.login);
+        googlesingin=findViewById(R.id.signInButton);
+
+        Intent intent = getIntent();
+        islogin = intent.getStringExtra("makelogin");
+        if (islogin.equalsIgnoreCase("1")) {
+            turnintologin();
+        } else if (islogin.equalsIgnoreCase("0")) {
+            Turninregister();
+        }
 
 
         // Button listeners
@@ -93,6 +119,8 @@ public class GoogleSignInActivity extends BaseActivity implements
         animY1.setRepeatCount(0);
         animY1.start();
 
+
+
         Animation fadeIn = new AlphaAnimation(0, 1);
         fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
         fadeIn.setDuration(1000);
@@ -102,6 +130,37 @@ public class GoogleSignInActivity extends BaseActivity implements
 
 
     }
+
+    private void turnintologin() {
+       nameed.setVisibility(View.INVISIBLE);
+        signintext.setText("Log In");
+        register.setVisibility(View.VISIBLE);
+        login.setVisibility(View.INVISIBLE);
+        googlesingin.setText(getString(R.string.google_sign_in));
+
+        ignore=true;
+
+    }
+    public void Turninregister() {
+        nameed.setVisibility(View.VISIBLE);
+        signintext.setText("Sign Up");
+        register.setVisibility(View.INVISIBLE);
+       login.setVisibility(View.VISIBLE);
+        googlesingin.setText(getString(R.string.google_sign_up));
+        ignore=false;
+
+    }
+    public void Turninregister2(View view) {
+        nameed.setVisibility(View.VISIBLE);
+        signintext.setText("Sign Up");
+        register.setVisibility(View.INVISIBLE);
+        login.setVisibility(View.VISIBLE);
+        googlesingin.setText(getString(R.string.google_sign_up));
+        ignore=false;
+
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -132,6 +191,7 @@ public class GoogleSignInActivity extends BaseActivity implements
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
                 Snackbar.make(findViewById(R.id.main_layout), "Signed In!", Snackbar.LENGTH_SHORT).show();
+
             } catch (ApiException e) {
                 // Google Sign In failed, update UI appropriately
                 Log.w(TAG, "Google sign in failed", e);
@@ -174,10 +234,32 @@ public class GoogleSignInActivity extends BaseActivity implements
                             }
                             assert user != null;
                             myIntent.putExtra("user_id",(getString(R.string.firebase_status_fmt, user.getUid())));//Optional parameters
+                               // myIntent.putExtra("username",(username));//Optional parameters
+                            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                            String user_id = user.getUid();
+                            String user_email= user.getEmail();
+                            String username= pref.getString("username","");
 
-                            myIntent.putExtra("username",(username));//Optional parameters
+                            SharedPreferences.Editor editor = pref.edit();
+                            editor.putString("user_email", user_email);
+                            editor.putString("user_id", user_id);
+                            editor.putString("username", username);
+                            editor.apply();
+
+                            if (!ignore) {
+                                FBdatabase();
+
+                            }
+
+                            if (ignore) {
+                               editor.putString("checkusername","1");
+                               editor.apply();
+                               set();
+                            }
 
                             GoogleSignInActivity.this.startActivity(myIntent);
+
+                            finish();
 
                         } else {
                             // If sign in fails, display a message to the user.
@@ -190,24 +272,83 @@ public class GoogleSignInActivity extends BaseActivity implements
                         hideProgressDialog();
                         // [END_EXCLUDE]
                     }
+
+                    private void FBdatabase() {
+                        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+
+                        String user_id=pref.getString("user_id", null);
+                        String user_email=pref.getString("user_email", null);
+                        String username=pref.getString("username", null);
+
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+                        // Create a new user with a first and last name
+                        Map<String, Object> user1 = new HashMap<>();
+                        user1.put("username", username);
+                        user1.put("email", user_email);
+                        user1.put("id", user_id);
+
+
+// Add a new document with a generated ID
+                        db.collection("users").document(user_id)
+                                .set(user1, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Log.d(TAG, "DocumentSnapshot successfully written!");
+                            }
+                        })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "Error writing document", e);
+                                    }
+                                });
+
+
+                    }
+
                 });
+    }
+
+    private void set() {
+        Toast.makeText(this, "setto1", Toast.LENGTH_SHORT).show();
     }
     // [END auth_with_google]
 
     // [START signin]
     private void signIn() {
 
-        String namecheck = nameed.getText().toString();
-        if (namecheck.matches("")) {
-            Toast.makeText(this, "You did not enter a username", Toast.LENGTH_SHORT).show();
-            return;
+        if (ignore) {
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+
+
+            // valid!
+        }
+        if (!ignore) {
+            String namecheck = nameed.getText().toString();
+            if (namecheck.matches("")) {
+                Toast.makeText(this, "You did not enter a username", Toast.LENGTH_SHORT).show();
+                return;
+
+            }
+
+            String username= nameed.getText().toString();
+
+            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putString("username", username);
+            editor.apply();
+
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+            // valid!
 
         }
 
-        username= nameed.getText().toString();
 
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+
+
+
     }
     // [END signin]
 
@@ -295,4 +436,7 @@ public class GoogleSignInActivity extends BaseActivity implements
         return super.onOptionsItemSelected(item);
     }
 
+    public void turnintologin(View view) {
+        turnintologin();
+    }
 }
