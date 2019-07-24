@@ -1,22 +1,31 @@
 package com.switches;
 
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewManager;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -29,6 +38,8 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.protobuf.StringValue;
+import com.suke.widget.SwitchButton;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +49,12 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private TextView text1;
     private TextView text2;
     private TextView text3;
+    private FloatingActionMenu Fabmenu;
+    private FloatingActionButton fab1;
+    private FloatingActionButton fab2;
+    private FloatingActionButton fab3;
+
+
     ;
 
     private FirebaseAuth mAuth;
@@ -57,14 +74,48 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //com.suke.widget.SwitchButton switchButton = (com.suke.widget.SwitchButton)
+                //findViewById(R.id.switch_button);
+        Fabmenu=findViewById(R.id.fabmenu);
+        fab1=findViewById(R.id.menu_item);
+        fab1.setOnClickListener(clickListener);
+        fab2=findViewById(R.id.menu_item2);
+        fab2.setOnClickListener(clickListener);
+        fab3=findViewById(R.id.menu_item3);
+        fab3.setOnClickListener(clickListener);
+
+
+        Fabmenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+            @Override
+            public void onMenuToggle(boolean opened) {
+                if (opened) {
+                    //String text = "Menu opened";
+                    //Toast.makeText(getApplicationContext() , text, Toast.LENGTH_LONG).show();
+                } else {
+                  // String text = "Menu closed";
+                   // Toast.makeText(getApplicationContext() , text, Toast.LENGTH_LONG).show();
+                }
+
+
+            }
+        });
+
+        SwitchesDoAll();
+
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
         String check = pref.getString("checkusername","");
+        Boolean DoAll = pref.getBoolean("SwitchesDoAll",false);
+
         SharedPreferences.Editor editor = pref.edit();
+
+        if(DoAll){
+            DoAll();
+        }
 
         // Toast.makeText(this, check, Toast.LENGTH_SHORT).show();
         if (check.equalsIgnoreCase("1")) {
             editor.putString("checkusername", "0");
-            editor.apply();
+            editor.commit();
             checkusername();
             Toast.makeText(this, "checking username..", Toast.LENGTH_SHORT).show();
         }
@@ -87,11 +138,15 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         if (prefs.getBoolean("firstrun", true)) {
 
             Intent myIntent = new Intent(MainActivity.this, GoogleSignInActivity.class);
-            myIntent.putExtra("makelogin", "0"); //Optional parame
+            myIntent.putExtra("makelogin", "0");
+            myIntent.putExtra("norestart", true)
+            ; //Optional parame
+
 
 
             MainActivity.this.startActivity(myIntent);
             finish();
+
 
             // Do first run stuff here then set 'firstrun' as false
             // using the following line to edit/commit prefs
@@ -101,6 +156,397 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         run();
         texts();
 
+    }
+
+    private void DoAll() {
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+
+
+        Toast.makeText(getApplicationContext() , "Please Restart ;)", Toast.LENGTH_LONG).show();
+
+        //startActivity(getIntent());
+        SwitchesDoAll();
+        editor.putBoolean("SwitchesDoAll",false);
+        editor.commit();
+        finish();
+    }
+
+    private void SwitchesDoAll() {
+        getNumOfSwitches();
+        // ReadForSwitches();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        prefs = getSharedPreferences("com.switches", MODE_PRIVATE);
+
+        //String user_id = prefs.getString("user_id", "1");
+
+        mAuth = FirebaseAuth.getInstance();
+        String user_id=  mAuth.getUid();
+
+        if (user_id != null && !user_id.equals("")) {
+
+            //do something
+
+
+            DocumentReference docRef = db.collection("users").document(
+                    user_id);
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+
+                            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                            int iswitch = pref.getInt("numberofswitches", 0);
+
+                            for (int i = 1; i <= iswitch; i++) {
+                                String switchstate = document.getString("switch"+i);
+
+
+                                SharedPreferences.Editor editor = prefs.edit();
+                                editor.putString("switch"+i,switchstate);
+                               // Toast.makeText(getApplicationContext() , "Reading", Toast.LENGTH_SHORT).show();
+                                editor.commit();
+
+                            }
+                            // Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                            //String test = document.getString("sw");
+
+                            //SharedPreferences.Editor editor = prefs.edit();
+                            // editor.putString("testemail", test);
+                            //editor.apply();
+
+                            //
+                            // text3.setText(test);
+                        } else {
+                            Log.d(TAG, "No such document");
+                        }
+                    } else {
+                        Log.d(TAG, "get failed with ", task.getException());
+                    }
+                }
+            });
+
+        }
+        MakeSwitches();
+        SyncSwitches();
+    }
+
+    private void getNumOfSwitches() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        prefs = getSharedPreferences("com.switches", MODE_PRIVATE);
+
+        mAuth = FirebaseAuth.getInstance();
+        String user_id=  mAuth.getUid();
+
+        if (user_id != null && !user_id.equals("")) {
+
+            DocumentReference docRef = db.collection("users").document(
+                    user_id);
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+
+                            String num = document.getString("numberofswitches");
+                            if(num != null && !num.trim().isEmpty()){
+                                int  num2 = Integer.parseInt(num);
+
+                                SharedPreferences prefs = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+
+
+                                SharedPreferences.Editor editor = prefs.edit();
+                                editor.putInt("numberofswitches",num2);
+                                //Toast.makeText(getApplicationContext() , "reading data", Toast.LENGTH_LONG).show();
+                                editor.commit();
+                            }
+
+
+
+
+                        } else {
+                            Log.d(TAG, "No such document");
+                        }
+                    } else {
+                        Log.d(TAG, "get failed with ", task.getException());
+                    }
+                }
+            });
+
+        }
+    }
+
+    private void ReadForSwitches() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        prefs = getSharedPreferences("com.switches", MODE_PRIVATE);
+
+        //String user_id = prefs.getString("user_id", "1");
+
+        mAuth = FirebaseAuth.getInstance();
+        String user_id=  mAuth.getUid();
+
+        if (user_id != null && !user_id.equals("")) {
+
+            //do something
+
+
+            DocumentReference docRef = db.collection("users").document(
+                    user_id);
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+
+                            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                            int iswitch = pref.getInt("numberofswitches", 0);
+
+                            for (int i = 1; i <= iswitch; i++) {
+                                String switchstate = document.getString("switch"+i);
+
+
+                                SharedPreferences.Editor editor = prefs.edit();
+                                editor.putString("switch"+i,switchstate);
+                                //Toast.makeText(getApplicationContext() , "Reading", Toast.LENGTH_SHORT).show();
+                                editor.commit();
+
+                            }
+                            // Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                            //String test = document.getString("sw");
+
+                            //SharedPreferences.Editor editor = prefs.edit();
+                            // editor.putString("testemail", test);
+                            //editor.apply();
+
+                            //
+                            // text3.setText(test);
+                        } else {
+                            Log.d(TAG, "No such document");
+                        }
+                    } else {
+                        Log.d(TAG, "get failed with ", task.getException());
+                    }
+                }
+            });
+
+        }
+    }
+
+    private void ClearSwitchesandData() {
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        int iswitch= pref.getInt("numberofswitches",0);
+
+        LinearLayout linear = findViewById(R.id.lay);
+        mAuth = FirebaseAuth.getInstance();
+        String user_id=  mAuth.getUid();
+
+
+
+
+        for (int i = 1; i <= iswitch; i++) {
+
+            pref.edit().remove("switch"+i).commit();
+
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            Map<String, Object> user = new HashMap<>();
+            user.put("switch"+i,"cleared");
+            user.put("numberofswitches","0");
+
+            if (user_id != null) {
+                db.collection("users").document(user_id)
+                        .set(user, SetOptions.merge());
+            }
+            else{
+
+                Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+            }
+
+
+            com.suke.widget.SwitchButton btn1 = findViewById(i);
+            linear.removeView(btn1);
+        }
+
+        pref.edit().remove("numberofswitches").commit();
+
+
+    }
+
+    private void ClearSwitches() {
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        int iswitch= pref.getInt("numberofswitches",0);
+
+        for (int i = 1; i <= iswitch; i++) {
+
+            pref.edit().remove("switch"+i).commit();
+
+
+        }
+
+        pref.edit().remove("numberofswitches").commit();
+
+
+    }
+    private void MakeSwitches() {
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        int iswitch= pref.getInt("numberofswitches",0);
+
+
+
+        float width = getResources().getDimension(R.dimen.btn_width);
+        float height = getResources().getDimension(R.dimen.btn_height);
+        LinearLayout linear = findViewById(R.id.lay);
+
+
+
+
+        for (int i = 1; i <= iswitch; i++) {
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.width= (int) width;
+            params.height= (int) height;
+            params.setMargins(5, 10, 5, 10);
+
+
+            com.suke.widget.SwitchButton btn = new SwitchButton(this);
+            btn.setId(i);
+            final int id_ = btn.getId();
+            //btn.setLayoutParams(new LinearLayout.LayoutParams(165, 60));
+            // btn.setText("button " + id_);
+            // btn.setBackgroundColor(Color.rgb(70, 80, 90));
+            linear.addView(btn, params);
+            com.suke.widget.SwitchButton btn1 = (SwitchButton) findViewById(id_);
+            btn1.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(SwitchButton view, boolean isChecked) {
+
+                    if (isChecked){
+                        Toast.makeText(view.getContext(),
+                                "Switch on = " + id_, Toast.LENGTH_SHORT)
+                                .show();
+
+                        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+
+                        String myId=pref.getString("user_id", null);
+
+                        int iswitch = pref.getInt("numberofswitches", 0);
+
+                        for (int i = 1; i <= iswitch; i++) {
+
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putString("switch"+id_,"1");
+                           // Toast.makeText(getApplicationContext() , "", Toast.LENGTH_SHORT).show();
+                            editor.commit();
+
+                        }
+
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                        Map<String, Object> user = new HashMap<>();
+                        user.put("switch"+id_, "1");
+
+
+
+                        if (myId != null) {
+                            db.collection("users").document(myId)
+                                    .set(user, SetOptions.merge());
+
+                        }
+                        else{
+
+                            Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+                        }
+
+
+
+                    }
+                    if (!isChecked){
+                        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                        int iswitch = pref.getInt("numberofswitches", 0);
+
+                        for (int i = 1; i <= iswitch; i++) {
+
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putString("switch"+id_,"0");
+                          //  Toast.makeText(getApplicationContext() , "Reading", Toast.LENGTH_SHORT).show();
+                            editor.commit();
+
+                        }
+
+
+                        String myId=pref.getString("user_id", null);
+
+                        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                        Map<String, Object> user = new HashMap<>();
+                        user.put("switch"+id_, "0");
+
+
+
+                        if (myId != null) {
+                            db.collection("users").document(myId)
+                                    .set(user, SetOptions.merge());
+
+                        }
+                        else{
+                            Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+
+
+                        }
+
+
+
+                    }
+
+
+
+
+                    //TODO do your job
+                }
+            });
+        }
+    }
+
+    private void SyncSwitches() {
+
+      //  Toast.makeText(this,"SYNCING",Toast.LENGTH_LONG).show();
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+
+        int iswitch=pref.getInt("numberofswitches",0);
+
+
+        for (int i = 1; i <= iswitch; i++) {
+
+            //com.suke.widget.SwitchButton btn = new SwitchButton(this);
+            ///btn.setId(i);
+            //final int id_ = btn.getId();
+
+            String Switchids = pref.getString("switch"+i,"hmm");
+            String ena="1";
+            String nula="0";
+
+            com.suke.widget.SwitchButton btn1 = findViewById(i);
+            if (Switchids.equals(ena)){
+                btn1.setChecked(true);
+                //Toast.makeText(this,Switchids,Toast.LENGTH_LONG).show();
+
+
+
+            }
+            if (Switchids.equals(nula)){
+                btn1.setChecked(false);
+                //Toast.makeText(this,"zero",Toast.LENGTH_LONG).show();
+            }
+
+           // Toast.makeText(this,Switchids,Toast.LENGTH_LONG).show();
 
 
 
@@ -109,16 +555,133 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
 
 
-
-
-
-
-
-
+        }
 
 
 
     }
+
+    private void AddSwitch() {
+
+
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        int iswitch= pref.getInt("numberofswitches",0);
+
+
+
+        float width = getResources().getDimension(R.dimen.btn_width);
+        float height = getResources().getDimension(R.dimen.btn_height);
+        LinearLayout linear = findViewById(R.id.lay);
+
+
+
+
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.width= (int) width;
+            params.height= (int) height;
+            params.setMargins(5, 10, 5, 10);
+
+
+            com.suke.widget.SwitchButton btn = new SwitchButton(this);
+            btn.setId(iswitch);
+            final int id_ = btn.getId();
+            //btn.setLayoutParams(new LinearLayout.LayoutParams(165, 60));
+            // btn.setText("button " + id_);
+            // btn.setBackgroundColor(Color.rgb(70, 80, 90));
+            linear.addView(btn, params);
+            com.suke.widget.SwitchButton btn1 = (SwitchButton) findViewById(id_);
+        btn1.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
+                if (isChecked){
+                    Toast.makeText(view.getContext(),
+                            "Switch on = " + id_, Toast.LENGTH_SHORT)
+                            .show();
+
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+
+                    int iswitch = pref.getInt("numberofswitches", 0);
+
+                    for (int i = 1; i <= iswitch; i++) {
+
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString("switch"+id_,"1");
+                       // Toast.makeText(getApplicationContext() , "Reading", Toast.LENGTH_SHORT).show();
+                        editor.commit();
+
+                    }
+
+
+
+                    String myId=pref.getString("user_id", null);
+
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("switch"+id_, "1");
+
+                    if (myId != null) {
+                        db.collection("users").document(myId)
+                                .set(user, SetOptions.merge());
+
+
+                    }
+                    else{
+
+                        Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+                    }
+
+
+
+                }
+                if (!isChecked){
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                    int iswitch = pref.getInt("numberofswitches", 0);
+
+                    for (int i = 1; i <= iswitch; i++) {
+
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString("switch"+id_,"0");
+                       // Toast.makeText(getApplicationContext() , "Reading", Toast.LENGTH_SHORT).show();
+                        editor.commit();
+
+                    }
+
+                    String myId=pref.getString("user_id", null);
+
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("switch"+id_, "0");
+
+                    if (myId != null) {
+                        db.collection("users").document(myId)
+                                .set(user, SetOptions.merge());
+
+                    }
+                    else{
+                        Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+
+
+                    }
+
+
+
+                }
+
+
+
+                //TODO do your job
+            }
+        });
+
+        }
+
 
     private void getusername() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -137,7 +700,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                         String test = document.getString("username");
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putString("username", test);
-                        editor.apply();
+                        editor.commit();
                         // test();
 
                     } else {
@@ -158,7 +721,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             islogedin = true;
-            Toast.makeText(this, "logged in", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(R.id.main_layout), "Logged In", Snackbar.LENGTH_SHORT).show();
             getusername();
 
             // User is signed in
@@ -204,7 +767,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
                     } else {
                         Log.d(TAG, "No such document");
-                        test();
+                        pleaseregister();
+
                     }
                 } else {
                     Log.d(TAG, "get failed with ", task.getException());
@@ -224,11 +788,15 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     }
 
     private void test() {
-        prefs = getSharedPreferences("com.switches", MODE_PRIVATE);
+        prefs = getSharedPreferences("MyPref", MODE_PRIVATE);
 
-        String test = prefs.getString("testemail", "?");
+        //String test = prefs.getString("switch1", "hmm");
 
-       // Toast.makeText(this, test, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "No Data yet", Toast.LENGTH_SHORT).show();
+
+        //String test2 = prefs.getString("switch2", "hmm2");
+
+       // Toast.makeText(this, test2+"dve", Toast.LENGTH_LONG).show();
 
     }
 
@@ -245,6 +813,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private void welcome() {
 
         Toast.makeText(this, "welcome", Toast.LENGTH_SHORT).show();
+        SwitchesDoAll();
+
     }
 
 
@@ -332,6 +902,90 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         super.onStart();
     }
 
+    private View.OnClickListener clickListener= new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+
+                case R.id.menu_item:
+
+
+
+
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                   int iswitch1= pref.getInt("numberofswitches",0);
+                   if (iswitch1 >= 8){
+                       Toast.makeText(getApplicationContext() , "Sorry that is the maximum", Toast.LENGTH_LONG).show();
+                       break;
+
+                   }
+                   else
+                    iswitch1 = iswitch1+1;
+
+
+
+
+                    SharedPreferences.Editor editor = pref.edit();
+                    editor.putInt("numberofswitches", iswitch1);
+                    editor.commit();
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    mAuth = FirebaseAuth.getInstance();
+                    String user_id=  mAuth.getUid();
+
+                   String  numberString= Integer.toString(iswitch1);
+
+
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("numberofswitches",numberString);
+                    user.put("switch"+iswitch1,"created");
+
+                    if (user_id != null) {
+                        db.collection("users").document(user_id)
+                                .set(user, SetOptions.merge());
+                    }
+                    else{
+
+                        Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+                    }
+                    AddSwitch();
+                    //ClearSwitches();
+                   // MakeSwitches();
+
+                    break;
+                case R.id.menu_item2:
+                   // Toast.makeText(getApplicationContext() , "2", Toast.LENGTH_LONG).show();
+                    //ReadForSwitches();
+
+                  //  SyncSwitches();
+
+
+
+                   // ClearSwitches();
+
+                   //SharedPreferences pref2 = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                    //pref2.edit().remove("numberofswitches").commit();
+
+
+                    break;
+
+                case R.id.menu_item3:
+                   // Toast.makeText(getApplicationContext() , "", Toast.LENGTH_LONG).show();
+                    //ReadForSwitches();
+                   // SyncSwitches();
+
+                    //getNumOfSwitches();
+                     ClearSwitchesandData();
+
+
+
+
+                    break;
+            }
+
+
+        }
+    };
+
 
 
 
@@ -403,6 +1057,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                        // MainActivity.this.startActivity(myIntent);
 
                         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                        ClearSwitches();
 
                         pref.edit().remove("user_email").commit();
                         pref.edit().remove("user_id").commit();
@@ -565,7 +1220,27 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             }
         }
 
+
+
     }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setTitle("Really Exit?")
+                .setMessage("Are you sure you want to exit?")
+                .setNegativeButton(android.R.string.no, null)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface arg0, int arg1) {
+                       // ReadForSwitches();
+
+                        MainActivity.super.onBackPressed();
+                    }
+                }).create().show();
+    }
+
+
 }
 
 

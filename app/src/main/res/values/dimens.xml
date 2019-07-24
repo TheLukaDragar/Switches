@@ -7,4 +7,7 @@
     <dimen name="icon_bottom_margin">24dp</dimen>
     <dimen name="title_bottom_margin">16dp</dimen>
     <dimen name="field_width_standard">160dp</dimen>
+    <dimen name="chart_width">165</dimen>
+    <dimen name="btn_width">165dp</dimen>
+    <dimen name="btn_height">60dp</dimen>
 </resources>

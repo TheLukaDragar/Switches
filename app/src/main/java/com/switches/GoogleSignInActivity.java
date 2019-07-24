@@ -68,7 +68,7 @@ public class GoogleSignInActivity extends BaseActivity implements
     private Button googlesingin;
     private String islogin="0";
     private boolean ignore;
-
+    private boolean norestart;
 
 
     @Override
@@ -87,6 +87,7 @@ public class GoogleSignInActivity extends BaseActivity implements
 
         Intent intent = getIntent();
         islogin = intent.getStringExtra("makelogin");
+        norestart = intent.getBooleanExtra("norestart",false);
         if (islogin.equalsIgnoreCase("1")) {
             turnintologin();
         } else if (islogin.equalsIgnoreCase("0")) {
@@ -207,7 +208,7 @@ public class GoogleSignInActivity extends BaseActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.option_menu, menu); //your file name
+        //inflater.inflate(R.menu.option_menu, menu); //your file name
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -287,18 +288,27 @@ public class GoogleSignInActivity extends BaseActivity implements
                             editor.putString("user_email", user_email);
                             editor.putString("user_id", user_id);
                             editor.putString("username", username);
-                            editor.apply();
+                            editor.commit();
 
                             if (!ignore) {
                                 FBdatabase();
+                                if(!norestart){
+                                    editor.putBoolean("SwitchesDoAll",true);
+                                    editor.commit();
+
+                                }
+
 
                             }
 
                             if (ignore) {
                                editor.putString("checkusername","1");
-                               editor.apply();
-                               set();
+                               editor.commit();
+
+
+
                             }
+                           //Optional param
 
                             GoogleSignInActivity.this.startActivity(myIntent);
 
@@ -352,9 +362,7 @@ public class GoogleSignInActivity extends BaseActivity implements
                 });
     }
 
-    private void set() {
-        Toast.makeText(this, "setto1", Toast.LENGTH_SHORT).show();
-    }
+
     // [END auth_with_google]
 
     // [START signin]
@@ -464,20 +472,20 @@ public class GoogleSignInActivity extends BaseActivity implements
        // }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
+  //  @Override
+    //public boolean onOptionsItemSelected(final MenuItem item) {
 
-        if (item.getItemId() == R.id.log_out){//your code
-            // EX : call intent if you want to swich to other activity
-            signOut();
+       // if (item.getItemId() == R.id.log_out){//your code
+           // EX : call intent if you want to swich to other activity
+           // signOut();
             
-            return true;
+           // return true;
             // case R.id.help:
             //your code
             //   return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+       // }
+        //return super.onOptionsItemSelected(item);
+   // }
 
     public void turnintologin(View view) {
         turnintologin();
