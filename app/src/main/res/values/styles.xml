@@ -46,13 +46,7 @@
         <item name="android:textSize">36sp</item>
     </style>
 
-    <style name="SwitchConnect" parent="AppTheme">
 
-        <item name="sb_checked_color">@color/colorAccent</item>
-        <item name="sb_background">@color/colorAccent</item>
-
-
-    </style>
 
 
 </resources>

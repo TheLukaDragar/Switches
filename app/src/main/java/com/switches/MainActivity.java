@@ -1,10 +1,14 @@
 package com.switches;
 
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -34,10 +38,14 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.dynamiclinks.DynamicLink;
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
+import com.google.firebase.dynamiclinks.ShortDynamicLink;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -57,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private FloatingActionButton fab1;
     private FloatingActionButton fab2;
     private FloatingActionButton fab3;
+    private FloatingActionButton fab4;
 
 
     ;
@@ -88,6 +97,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         fab2.setOnClickListener(clickListener);
         fab3=findViewById(R.id.menu_item3);
         fab3.setOnClickListener(clickListener);
+        fab4=findViewById(R.id.menu_item4);
+        fab4.setOnClickListener(clickListener);
 
 
         Fabmenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
@@ -520,7 +531,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                });
            }
             if(lockswitches){
-                com.suke.widget.SwitchButton btn = new SwitchButton(new ContextThemeWrapper(this, R.style.SwitchConnect));
+                com.suke.widget.SwitchButton btn = new SwitchButton(this);
+                //TODO MAKE THEMC HANGE COLORS !!!
                 btn.setId(i);
                 final int id_ = btn.getId();
                 linear.addView(btn, params);
@@ -536,11 +548,23 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     public void onCheckedChanged(SwitchButton view, boolean isChecked) {
 
                         if (isChecked){
+                            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                            int iswitch = pref.getInt("numberofswitches", 0);
+
+                            for (int i = 1; i <= iswitch; i++) {
+                                SharedPreferences.Editor editor = prefs.edit();
+                                editor.putString("ConnectSwitch", String.valueOf(id_));
+                                //  Toast.makeText(getApplicationContext() , "Reading", Toast.LENGTH_SHORT).show();
+                                editor.commit();
+                                CreateConnection();
+                            }
 
 
 
                         }
                         if (!isChecked){
+                            Toast.makeText(getApplicationContext() , "Bug", Toast.LENGTH_SHORT).show();
+
 
                         }
 
@@ -554,6 +578,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             }
         }
     }
+
 
     private void SyncSwitches() {
 
@@ -1034,16 +1059,34 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
                     //getNumOfSwitches();
                      ClearSwitchesandData();
+                    break;
 
 
+                case R.id.menu_item4:
 
+                    if(!islogedin){
+                        Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+                        break;
+                    }
+                    // Toast.makeText(getApplicationContext() , "", Toast.LENGTH_LONG).show();
+                    //ReadForSwitches();
+                    // SyncSwitches();
+
+                    //getNumOfSwitches();
+                    AddManually();
 
                     break;
+
+
             }
+
+
 
 
         }
     };
+
+
 
     private void WhoWasClicked() {
         lockswitches=true;
@@ -1055,11 +1098,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
 
         //fab2.
-
-
-
-
-
     }
 
     private void ClearSwitchesFromLay() {
@@ -1079,6 +1117,87 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         }
     }
+
+    private void CreateConnection() {
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+        String Switchtoconnect = pref.getString("ConnectSwitch",null);
+        mAuth = FirebaseAuth.getInstance();
+        String user_id=  mAuth.getUid();
+
+
+       // String link = user_id+Switchtoconnect;
+       // String full = "https://com.switches.page.link/?link=your_deep_link&apn=com.switches[&amv=minimum_version][&afl=fallback_link]";
+       // DynamicLink dynamicLink = FirebaseDynamicLinks.getInstance().createDynamicLink()
+        //        .setLink(Uri.parse(link))
+         //       .setDomainUriPrefix("https://switches.page.link")
+                // Open links with this app on Android
+          //      .setAndroidParameters(new DynamicLink.AndroidParameters.Builder("com.switches").build())
+                // Open links with com.example.ios on iOS
+           //     .buildDynamicLink();
+
+       // Uri dynamicLinkUri = dynamicLink.getUri();
+      //  String ok = dynamicLinkUri.toString();
+
+       // Toast.makeText(this,ok, Toast.LENGTH_LONG).show();
+
+
+       // ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+       // ClipData clip = ClipData.newPlainText("test", ok);
+       // clipboard.setPrimaryClip(clip);
+
+      //  Intent sendIntent = new Intent();
+       // sendIntent.setAction(Intent.ACTION_SEND);
+       // sendIntent.putExtra(Intent.EXTRA_TEXT, dynamicLinkUri);
+       // sendIntent.setType("text/plain");
+       // startActivity(sendIntent);
+
+
+    }
+    private void AddManually() {
+        Intent myIntent = new Intent(MainActivity.this, SharedSwitchesActivity.class);
+        myIntent.putExtra("addmanually", true); //Optional parame
+        MainActivity.this.startActivity(myIntent);
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private void signOut() {
