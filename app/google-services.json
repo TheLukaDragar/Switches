@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "773539581645-kdlptd33g8bt5ic28t7v72utlpnhqqjo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.switches",
+            "certificate_hash": "f46550f5e45afe5494ef10f8eb92397ac8ddc2d8"
+          }
+        },
+        {
           "client_id": "773539581645-6e59pdqtjl0m489uq2cfl90ki6s611ve.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

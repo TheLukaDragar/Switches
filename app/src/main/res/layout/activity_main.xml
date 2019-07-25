@@ -64,9 +64,17 @@
             android:id="@+id/lay"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"/>
+            android:orientation="vertical">
+
+        </LinearLayout>
 
     </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/lin"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"></LinearLayout>
 
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/fabmenu"
