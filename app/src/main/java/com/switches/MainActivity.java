@@ -115,6 +115,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                         lockswitches=false;
                         fab1.setVisibility(View.VISIBLE);
                         fab3.setVisibility(View.VISIBLE);
+                        fab4.setVisibility(View.GONE);
+                        fab5.setVisibility(View.GONE);
                         Fabmenu.setMenuButtonLabelText("Switch !");
                         Fabmenu.open(true);
                         ClearSwitchesFromLay();
@@ -1109,6 +1111,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         lockswitches=true;
         fab1.setVisibility(View.GONE);
         fab3.setVisibility(View.GONE);
+        fab4.setVisibility(View.VISIBLE);
+        fab5.setVisibility(View.VISIBLE);
         Fabmenu.setMenuButtonLabelText("Cancel selection");
         ClearSwitchesFromLay();
         MakeSwitches();

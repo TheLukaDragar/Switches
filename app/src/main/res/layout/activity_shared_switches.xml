@@ -105,6 +105,18 @@
 
             fab:fab_size="normal" />
 
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/menu_item22"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_add_action"
+            app:fab_label="Go Home"
+            fab:fabSize="normal"
+            fab:fab_colorNormal="#00C853"
+            fab:fab_colorPressed="#00B8D4"
+            fab:fab_colorRipple="#00BFA5"
+            />
+
     </com.github.clans.fab.FloatingActionMenu>
 
 

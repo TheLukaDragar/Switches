@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.TwoStatePreference;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,6 +53,7 @@ public class SharedSwitchesActivity extends AppCompatActivity {
     private SwitchButton switchButton;
     private FloatingActionMenu Fabmenu;
     private FloatingActionButton fab1;
+    private FloatingActionButton fab2;
 
     private FirebaseAuth mAuth;
 
@@ -62,6 +65,8 @@ public class SharedSwitchesActivity extends AppCompatActivity {
         Fabmenu=findViewById(R.id.fabmenu2);
         fab1=findViewById(R.id.menu_item21);
         fab1.setOnClickListener(clickListener);
+        fab2=findViewById(R.id.menu_item22);
+        fab2.setOnClickListener(clickListener);
 
         userid = findViewById(R.id.name);
         switchnumber = findViewById(R.id.editText2);
@@ -218,37 +223,6 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
 
 
-    private void Sync() {
-
-        SharedPreferences prefs = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        String ss = prefs.getString("sharedswitch", "0");
-
-        RelativeLayout linear = findViewById(R.id.mainone);
-
-
-        com.suke.widget.SwitchButton btn = new SwitchButton(this);
-       // btn.setId(Integer.parseInt("sharedswitch" + userid));
-        linear.addView(btn);
-        Animation switchanim = AnimationUtils.loadAnimation(this, R.anim.switchanim);
-        btn.setAnimation(switchanim);
-
-        String ena = "1";
-        String nula = "0";
-
-
-        if (ss != null && ss.equals(ena)) {
-
-            btn.setChecked(true);
-
-
-        }
-
-
-        if (ss != null && ss.equals(nula)) {
-            btn.setChecked(false);
-        }
-
-    }
 
     private void Syncer(){
 
@@ -259,9 +233,9 @@ public class SharedSwitchesActivity extends AppCompatActivity {
         for (int i=0; i<sw.length; i++) {
 
            String txt=sw[i];
-            final String shared_switch_id = txt.substring(txt.length() - 1);
+           final String shared_switch_id = txt.substring(txt.length() - 1);
             String shared_switch_user_id= txt.replaceFirst(".$","");
-            Toast.makeText(getApplicationContext() , shared_switch_id, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext() , shared_switch_user_id, Toast.LENGTH_SHORT).show();
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference docRef = db.collection("users").document(shared_switch_user_id);
@@ -275,26 +249,40 @@ public class SharedSwitchesActivity extends AppCompatActivity {
                         DocumentSnapshot document = task.getResult();
                         if (document.exists()) {
 
+                            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                            Set<String> sharedarray = pref.getStringSet("sharedswitchesarray", new HashSet<String>());
+                            String[] sw = sharedarray.toArray(new String[sharedarray.size()]);
+                            String txt=sw[finalI];
+                            String shared_switch_user_id= txt.replaceFirst(".$","");
 
 
 
-
-
-
-
-
-                                String switchstate = document.getString("switch1");
+                                String switchstate = document.getString("switch"+shared_switch_id);
+                                String username = document.getString("username");
+                           // Toast.makeText(getApplicationContext() ,"switch state of 1 ="+switchstate, Toast.LENGTH_SHORT).show();
                                 com.suke.widget.SwitchButton btn1 = findViewById(finalI);
+                                TextView textView = findViewById(100+finalI);
+
+                                if (username==null){
+                                    textView.setText("User deleted this switch");
+
+                                }
+                                else {
+                                    textView.setText(username+"'s switch "+shared_switch_id);
+
+                                }
+
 
                                 String ena = "1";
                                 String nula = "0";
                                 if(switchstate == null){
-                                    Toast.makeText(getApplicationContext() ,"null", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext() ,"Switch isnt there", Toast.LENGTH_SHORT).show();
 
 
                                 }
                                 if (switchstate != null && switchstate.equals(ena)) {
                                     btn1.setChecked(true);
+
                                     //Toast.makeText(this,Switchids,Toast.LENGTH_LONG).show();
 
 
@@ -378,21 +366,26 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
         for (int i=0; i<sw.length; i++) {
 
+
+
+
+
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
 
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
 
-            params.width= (int) width;
+            //params.width= (int) width;
             params.height= (int) height;
-            params.setMargins(20, 40, 5, 40);
+            params.setMargins(20, 5, 5, 5);
 
             TextView textView = new TextView(this);
+            textView.setId(100+i);
 
 
-             String text=sw[i];
+             String text="New shared switch added";
 
-             textView.setText("SharedSwitch:"+text);
+             //textView.setText(text);
 
             LinearLayout.LayoutParams paramstxt = new LinearLayout.LayoutParams(
 
@@ -400,23 +393,16 @@ public class SharedSwitchesActivity extends AppCompatActivity {
                            LinearLayout.LayoutParams.WRAP_CONTENT);
 
                      paramstxt.gravity= Gravity.START;
-                    paramstxt.width= (int) width;
-                    paramstxt.height= (int) height;
+                    //paramstxt.width= (int) width;
+                   // paramstxt.height= (int) height;
 
                       paramstxt.setMargins(50, 10, 5, 0);
                      linear.addView(textView,paramstxt);
 
 
-                com.suke.widget.SwitchButton btn = new SwitchButton(this);
+                final com.suke.widget.SwitchButton btn = new SwitchButton(this);
                 btn.setId(i);
                 final int id_ = btn.getId();
-
-
-
-
-
-
-
 
 
                 //btn.setLayoutParams(new LinearLayout.LayoutParams(165, 60));
@@ -425,13 +411,34 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
 
                 linear.addView(btn, params);
-                com.suke.widget.SwitchButton btn1 = (SwitchButton) findViewById(id_);
+                final com.suke.widget.SwitchButton btn1 = (SwitchButton) findViewById(id_);
                 Animation switchanim= AnimationUtils.loadAnimation(this, R.anim.switchanim);
                 btn1.setAnimation(switchanim);
+            btn1.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(SwitchButton view, boolean isChecked) {
 
+                    if (isChecked){
+                        Toast.makeText(view.getContext(),
+                                "I do nothing", Toast.LENGTH_SHORT)
+                                .show();
+                        //TODO MAKE SWITCH BAXK
+
+
+
+
+
+                    }
 
 
                 }
+            });
+
+
+
+
+        }
+
 
 
 
@@ -447,7 +454,33 @@ public class SharedSwitchesActivity extends AppCompatActivity {
                     SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
                     SharedPreferences.Editor editor = pref.edit();
 
-                    pref.edit().remove("sharedswitchesarray").commit();
+                    mAuth = FirebaseAuth.getInstance();
+                    String user_id=  mAuth.getUid();
+
+                    Map<String, Object> user = new HashMap<>();
+
+                    user.put("SharedSwitchesList","0");
+
+                    pref.edit().remove("sharedswitchesarray")
+                            .commit();
+
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    if (user_id != null) {
+                        db.collection("users").document(user_id)
+                                .set(user, SetOptions.merge());
+                    }
+                    else{
+
+                        Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+                    }
+
+                case R.id.menu_item22:
+
+                    finish();
+
+
+
+
 
 
 
