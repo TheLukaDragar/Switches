@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private FloatingActionButton fab2;
     private FloatingActionButton fab3;
     private FloatingActionButton fab4;
+    private FloatingActionButton fab5;
 
 
     ;
@@ -99,6 +100,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         fab3.setOnClickListener(clickListener);
         fab4=findViewById(R.id.menu_item4);
         fab4.setOnClickListener(clickListener);
+        fab5=findViewById(R.id.menu_item5);
+        fab5.setOnClickListener(clickListener);
 
 
         Fabmenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
@@ -1078,6 +1081,20 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     break;
 
 
+                case R.id.menu_item5:
+                    if(!islogedin){
+                        Snackbar.make(findViewById(R.id.main), "You need to log in", Snackbar.LENGTH_SHORT).show();
+                        break;
+                    }
+
+                    Intent myIntent = new Intent(MainActivity.this, SharedSwitchesActivity.class);
+                    //myIntent.putExtra("addmanually", true); //Optional parame
+
+                    MainActivity.this.startActivity(myIntent);
+                    break;
+
+
+
             }
 
 
@@ -1155,7 +1172,12 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     }
     private void AddManually() {
         Intent myIntent = new Intent(MainActivity.this, SharedSwitchesActivity.class);
-        myIntent.putExtra("addmanually", true); //Optional parame
+        //myIntent.putExtra("addmanually", true); //Optional parame
+
+        SharedPreferences pref = getSharedPreferences("MyPref",MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putBoolean("manually", true);
+        editor.commit();
         MainActivity.this.startActivity(myIntent);
 
 
