@@ -18,8 +18,8 @@ android {
         minSdkVersion 16
         targetSdkVersion 28
         multiDexEnabled true
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "2.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -53,7 +53,9 @@ dependencies {
     implementation 'com.github.clans:fab:1.6.4'
     implementation 'com.github.zcweng:switch-button:0.0.3@aar'
     implementation 'com.google.firebase:firebase-dynamic-links:18.0.0'
+    implementation 'com.google.firebase:firebase-core:17.0.0'
 
 
 
 }
+apply plugin: 'com.google.gms.google-services'

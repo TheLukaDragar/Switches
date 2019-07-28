@@ -38,6 +38,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
@@ -45,6 +46,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.dynamiclinks.DynamicLink;
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
+import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
 import com.google.firebase.dynamiclinks.ShortDynamicLink;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -53,8 +55,11 @@ import com.google.firebase.firestore.SetOptions;
 import com.google.protobuf.StringValue;
 import com.suke.widget.SwitchButton;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements CompoundButton.OnCheckedChangeListener {
 
@@ -87,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle("Your Switches");
         setContentView(R.layout.activity_main);
 
         //com.suke.widget.SwitchButton switchButton = (com.suke.widget.SwitchButton)
@@ -114,13 +120,18 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     if(lockswitches){
                         lockswitches=false;
                         fab1.setVisibility(View.VISIBLE);
+                        fab2.setVisibility(View.VISIBLE);
                         fab3.setVisibility(View.VISIBLE);
                         fab4.setVisibility(View.GONE);
-                        fab5.setVisibility(View.GONE);
+                        fab5.setVisibility(View.VISIBLE);
                         Fabmenu.setMenuButtonLabelText("Switch !");
                         Fabmenu.open(true);
                         ClearSwitchesFromLay();
                         SwitchesDoAll();
+                        SharedPreferences pref = getSharedPreferences("MyPref",MODE_PRIVATE);
+                        SharedPreferences.Editor editor = pref.edit();
+                        editor.putBoolean("manually", false);
+                        editor.commit();
 
 
                     }
@@ -187,6 +198,80 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         run();
         texts();
+
+        FirebaseDynamicLinks.getInstance()
+                .getDynamicLink(getIntent())
+                .addOnSuccessListener(this, new OnSuccessListener<PendingDynamicLinkData>() {
+                    @Override
+                    public void onSuccess(PendingDynamicLinkData pendingDynamicLinkData) {
+                        // Get deep link from result (may be null if no link is found)
+                        Uri deepLink = null;
+                        if (pendingDynamicLinkData != null) {
+                            deepLink = pendingDynamicLinkData.getLink();
+                        }
+                        final Uri finalDeepLink = deepLink;
+                       // if (finalDeepLink==null){
+                         //   Toast.makeText(getApplicationContext() , "nilz", Toast.LENGTH_SHORT).show();
+
+                      //  }
+
+                        // If the user isn't signed in and the pending Dynamic Link is
+                        // an invitation, sign in the user anonymously, and record the
+                        // referrer's UID.
+                        //
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                        if(user==null){
+                           // Toast.makeText(getApplicationContext() , "you need to log in try again later", Toast.LENGTH_SHORT).show();
+
+                        }
+                        if (finalDeepLink != null&&user!=null
+                                && finalDeepLink.getBooleanQueryParameter("switchtoconnect", false)) {
+                            String switchtoconnect = finalDeepLink.getQueryParameter("switchtoconnect");
+                            Toast.makeText(getApplicationContext() , switchtoconnect, Toast.LENGTH_SHORT).show();
+
+
+                            String shared_switch_id = switchtoconnect.substring(switchtoconnect.length() - 1);
+                            String shared_switch_user_id= switchtoconnect.replaceFirst(".$","");
+
+                            SharedPreferences prefs = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = prefs.edit();
+                            Set<String> oldSet = prefs.getStringSet("sharedswitchesarray", new HashSet<String>());
+
+//make a copy, update it and save it
+                            Set<String> newStrSet = new HashSet<String>();
+                            newStrSet.add(shared_switch_user_id+shared_switch_id);
+                            if (oldSet != null) {
+                                newStrSet.addAll(oldSet);
+                            }
+
+                            FirebaseFirestore db = FirebaseFirestore.getInstance();
+                            mAuth = FirebaseAuth.getInstance();
+                            FirebaseUser userin = mAuth.getCurrentUser();
+
+                            String user_id = userin.getUid();
+
+                            String[] sw = newStrSet.toArray(new String[newStrSet.size()]);
+
+                            Map<String, Object> user1 = new HashMap<>();
+
+
+
+                            user1.put("SharedSwitchesList", Arrays.asList(sw));
+
+
+                            db.collection("users").document(user_id)
+                                    .set(user1, SetOptions.merge());
+                          Snackbar snackbar = Snackbar.make(findViewById(R.id.main), "Switch added", 8000);
+                            snackbar.setAction("See it here", new MyUndoListener());
+                            snackbar.show();
+
+
+
+
+                        }
+                    }
+                });
 
     }
 
@@ -554,15 +639,17 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
                         if (isChecked){
                             SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-                            int iswitch = pref.getInt("numberofswitches", 0);
 
-                            for (int i = 1; i <= iswitch; i++) {
                                 SharedPreferences.Editor editor = prefs.edit();
-                                editor.putString("ConnectSwitch", String.valueOf(id_));
-                                //  Toast.makeText(getApplicationContext() , "Reading", Toast.LENGTH_SHORT).show();
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            String uid = user.getUid();
+                                editor.putString("ConnectSwitch",uid +String.valueOf(id_));
+
+                            Snackbar.make(findViewById(R.id.main), "Generating link for switch: "+id_+" to share", Snackbar.LENGTH_LONG).show();
                                 editor.commit();
+
                                 CreateConnection();
-                            }
+
 
 
 
@@ -1110,10 +1197,13 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private void WhoWasClicked() {
         lockswitches=true;
         fab1.setVisibility(View.GONE);
+        fab2.setVisibility(View.GONE);
         fab3.setVisibility(View.GONE);
         fab4.setVisibility(View.VISIBLE);
-        fab5.setVisibility(View.VISIBLE);
+        fab5.setVisibility(View.GONE);
         Fabmenu.setMenuButtonLabelText("Cancel selection");
+        Snackbar.make(findViewById(R.id.main), "Select the one you wish to share", 8000).show();
+
         ClearSwitchesFromLay();
         MakeSwitches();
 
@@ -1141,9 +1231,70 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     private void CreateConnection() {
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
-        String Switchtoconnect = pref.getString("ConnectSwitch",null);
-        mAuth = FirebaseAuth.getInstance();
-        String user_id=  mAuth.getUid();
+        final String Switchtoconnect = pref.getString("ConnectSwitch",null);
+
+
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = user.getUid();
+       // String link = "https://app.switches.com/?switchtoconnect=5";
+       // Uri imgUri= Uri.parse("https://www.drupal.org/files/project-images/drupal-addtoany-logo.png");
+      // DynamicLink dynamicLink=  FirebaseDynamicLinks.getInstance().createDynamicLink()
+           //     .setLink(Uri.parse(link))
+             //   .setDomainUriPrefix("https://switches.page.link")
+              //  .setAndroidParameters(
+                //        new DynamicLink.AndroidParameters.Builder("com.switches")
+               //  //               .setMinimumVersion(125)
+                     ////           .setFallbackUrl(Uri.parse("https://play.google.com/store/apps/details?id=com.switches"))
+                       //         .build())
+               // .setIosParameters(
+                   //     new DynamicLink.IosParameters.Builder("com.switches.ios")
+                     //           .setFallbackUrl(Uri.parse("https://play.google.com/store/apps/details?id=com.switches"))
+                       //         .build())
+                //.setSocialMetaTagParameters(new DynamicLink.SocialMetaTagParameters.Builder()
+                  //      .setTitle("Connect my switch")
+                    //    .setDescription("Description")
+                     //   .setImageUrl(imgUri)
+                     //   .build())
+
+               // .buildDynamicLink();
+             //  String dyn = String.valueOf(dynamicLink.getUri());
+
+
+
+
+
+                        String myb = "https://switches.page.link/?link=https://app.switches.com?switchtoconnect%3D"+Switchtoconnect+"&apn=com.switches&st=link+to+connnect+my+switch&sd=Open+this+link+and+a+switch" +
+                                "+will+be+added+to+your+shared+switches+list&si=https://www.drupal.org/files/project-images/drupal-addtoany-logo.png";
+
+        Task<ShortDynamicLink> shortLinkTask = FirebaseDynamicLinks.getInstance().createDynamicLink()
+                .setLongLink(Uri.parse(myb))
+                .buildShortDynamicLink()
+                .addOnCompleteListener(this, new OnCompleteListener<ShortDynamicLink>() {
+                    @Override
+                    public void onComplete(@NonNull Task<ShortDynamicLink> task) {
+                        if (task.isSuccessful()) {
+                            // Short link created
+                            Uri shortLink = task.getResult().getShortLink();
+                            Uri flowchartLink = task.getResult().getPreviewLink();
+
+                           String dyn = String.valueOf(shortLink);
+                            //Toast.makeText(this,ok, Toast.LENGTH_LONG).show();
+
+                            Intent i = new Intent(Intent.ACTION_SEND);
+                            i.setType("text/plain");
+                            i.putExtra(Intent.EXTRA_SUBJECT, "Sharing URL");
+                            i.putExtra(Intent.EXTRA_TEXT, dyn);
+                            startActivity(Intent.createChooser(i, "Share URL"));
+                        } else {
+                            // Error
+                            // ...
+                        }
+                    }
+                });
+
+
+
 
 
        // String link = user_id+Switchtoconnect;
@@ -1246,6 +1397,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                         pref.edit().remove("user_email").commit();
                         pref.edit().remove("user_id").commit();
                         pref.edit().remove("username").commit();
+                        pref.edit().remove("sharedswitchesarray").commit();
                        texts();
                        checkuser();
                         invalidateOptionsMenu();
@@ -1425,6 +1577,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     }
 
 
+    private class MyUndoListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            Intent myIntent = new Intent(MainActivity.this, SharedSwitchesActivity.class);
+            //myIntent.putExtra("addmanually", true); //Optional parame
+
+            MainActivity.this.startActivity(myIntent);
+
+        }
+    }
 }
 
 

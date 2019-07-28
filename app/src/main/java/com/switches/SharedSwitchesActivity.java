@@ -1,11 +1,15 @@
 package com.switches;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.TwoStatePreference;
 import android.util.Log;
 import android.view.Gravity;
@@ -22,21 +26,27 @@ import android.widget.Toast;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.annotations.Nullable;
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks;
+import com.google.firebase.dynamiclinks.PendingDynamicLinkData;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.suke.widget.SwitchButton;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,10 +66,12 @@ public class SharedSwitchesActivity extends AppCompatActivity {
     private FloatingActionButton fab2;
 
     private FirebaseAuth mAuth;
+    private boolean created;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle("Connected Switches");
         setContentView(R.layout.activity_shared_switches);
 
         Fabmenu=findViewById(R.id.fabmenu2);
@@ -101,18 +113,90 @@ public class SharedSwitchesActivity extends AppCompatActivity {
         }
 
         if ((!manually)){
-            Toast.makeText(getApplicationContext() , "not manually", Toast.LENGTH_SHORT).show();
-            MakeSwitches();
-           Syncer();
+          //  Toast.makeText(getApplicationContext() , "", Toast.LENGTH_SHORT).show();
+            GetArrayFromDB();
+
 
         }
 
+        final Handler handler = new Handler();
+        final int delay = 5000; //milliseconds
 
-        //
+        handler.postDelayed(new Runnable(){
+            public void run(){
+                Syncer();
+                //do something
+                handler.postDelayed(this, delay);
+            }
+        }, delay);
+
+
 
 
     }
 
+
+    private void GetArrayFromDB() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser userin = mAuth.getCurrentUser();
+
+        String user_id = userin.getUid();
+
+        DocumentReference docRef = db.collection("users").document(user_id);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                String TAG="getarrayfromdb";
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document != null && document.exists()) {
+
+                        SharedPreferences prefs = getApplicationContext().getSharedPreferences("MyPref", MODE_PRIVATE);
+                        List<String> stringList = (List<String>) document.get("SharedSwitchesList");
+
+                        if(stringList==null){
+                           // Toast.makeText(getApplicationContext() , "You dont have any yet add one", Toast.LENGTH_SHORT).show();
+                            return;
+
+
+                        }
+
+
+                        SharedPreferences.Editor editor = prefs.edit();
+
+
+
+                        Set<String> Array = new HashSet<String>(stringList);
+
+
+
+
+                        editor.putStringSet("sharedswitchesarray",Array); editor.commit();
+
+                        MakeSwitches();
+                        Syncer();
+
+                        //TODO Clear on logout
+
+
+
+
+                    } else {
+                        Log.d(TAG, "No such document");
+                        Toast.makeText(getApplicationContext() , "No shared switches found yet", Toast.LENGTH_SHORT).show();
+
+                    }
+                } else {
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+                //TODO do your job
+            }
+        });
+
+
+    }
 
 
     private void test() {
@@ -132,7 +216,7 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        Toast.makeText(getApplicationContext() , id, Toast.LENGTH_SHORT).show();
+       // Toast.makeText(getApplicationContext() , id, Toast.LENGTH_SHORT).show();
 
         DocumentReference docRef = db.collection("users").document(id);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -235,7 +319,7 @@ public class SharedSwitchesActivity extends AppCompatActivity {
            String txt=sw[i];
            final String shared_switch_id = txt.substring(txt.length() - 1);
             String shared_switch_user_id= txt.replaceFirst(".$","");
-            Toast.makeText(getApplicationContext() , shared_switch_user_id, Toast.LENGTH_SHORT).show();
+           // Toast.makeText(getApplicationContext() , shared_switch_user_id, Toast.LENGTH_SHORT).show();
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference docRef = db.collection("users").document(shared_switch_user_id);
@@ -291,6 +375,8 @@ public class SharedSwitchesActivity extends AppCompatActivity {
                                     btn1.setChecked(false);
                                     //Toast.makeText(this,"zero",Toast.LENGTH_LONG).show();
                                 }
+
+                                created=true;
 
 
 
@@ -355,7 +441,7 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
        // int counts = sharedarray.size();
        // Toast.makeText(getApplicationContext() , String.valueOf(counts), Toast.LENGTH_SHORT).show();
-        Toast.makeText(getApplicationContext() , sharedarray.toString(), Toast.LENGTH_SHORT).show();
+       // Toast.makeText(getApplicationContext() , sharedarray.toString(), Toast.LENGTH_SHORT).show();
 
 
 
@@ -411,6 +497,7 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
 
                 linear.addView(btn, params);
+
                 final com.suke.widget.SwitchButton btn1 = (SwitchButton) findViewById(id_);
                 Animation switchanim= AnimationUtils.loadAnimation(this, R.anim.switchanim);
                 btn1.setAnimation(switchanim);
@@ -418,10 +505,12 @@ public class SharedSwitchesActivity extends AppCompatActivity {
                 @Override
                 public void onCheckedChanged(SwitchButton view, boolean isChecked) {
 
-                    if (isChecked){
-                        Toast.makeText(view.getContext(),
-                                "I do nothing", Toast.LENGTH_SHORT)
-                                .show();
+                    if (isChecked&&created){
+
+                      //  Toast.makeText(view.getContext(),
+                           //     "I do nothing", Toast.LENGTH_SHORT)
+                        //        .show();
+
                         //TODO MAKE SWITCH BAXK
 
 
@@ -433,6 +522,8 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
                 }
             });
+
+
 
 
 
@@ -459,7 +550,7 @@ public class SharedSwitchesActivity extends AppCompatActivity {
 
                     Map<String, Object> user = new HashMap<>();
 
-                    user.put("SharedSwitchesList","0");
+                    user.put("SharedSwitchesList", FieldValue.delete());
 
                     pref.edit().remove("sharedswitchesarray")
                             .commit();
@@ -503,8 +594,21 @@ public class SharedSwitchesActivity extends AppCompatActivity {
     };
 
 
+    @Override
+    public void onBackPressed() {
 
+            SharedPreferences pref = getSharedPreferences("MyPref",MODE_PRIVATE);
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putBoolean("manually", false);
+            editor.commit();
+
+       SharedSwitchesActivity.super.onBackPressed();
+
+
+    }
         }
+
+
 
 
 
