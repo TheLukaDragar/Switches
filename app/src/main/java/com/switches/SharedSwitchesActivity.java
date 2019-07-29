@@ -120,7 +120,7 @@ public class SharedSwitchesActivity extends AppCompatActivity {
         }
 
         final Handler handler = new Handler();
-        final int delay = 5000; //milliseconds
+        final int delay = 1000; //milliseconds
 
         handler.postDelayed(new Runnable(){
             public void run(){

@@ -31,6 +31,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -72,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private FloatingActionButton fab3;
     private FloatingActionButton fab4;
     private FloatingActionButton fab5;
+    private FloatingActionButton fab6;
+    private FloatingActionButton fab7;
 
 
     ;
@@ -108,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         fab4.setOnClickListener(clickListener);
         fab5=findViewById(R.id.menu_item5);
         fab5.setOnClickListener(clickListener);
+        fab6=findViewById(R.id.menu_item6);
+      //  fab6.setOnClickListener(clickListener);
+        fab7=findViewById(R.id.menu_item7);
+    //    fab7.setOnClickListener(clickListener);
 
 
         Fabmenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
@@ -1569,9 +1576,12 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     public void onClick(DialogInterface arg0, int arg1) {
+
+
                        // ReadForSwitches();
 
                         MainActivity.super.onBackPressed();
+
                     }
                 }).create().show();
     }
@@ -1586,6 +1596,19 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             MainActivity.this.startActivity(myIntent);
 
         }
+    }
+
+    public void startService(View v) {
+        //String input = editTextInput.getText().toString();
+
+        Intent serviceIntent = new Intent(this, NotifService.class);
+        // serviceIntent.putExtra("inputExtra", input);
+
+        ContextCompat.startForegroundService(this, serviceIntent);
+    }
+    public void stopService(View v) {
+        Intent serviceIntent = new Intent(this, NotifService.class);
+        stopService(serviceIntent);
     }
 }
 

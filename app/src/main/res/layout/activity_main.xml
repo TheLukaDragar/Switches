@@ -117,6 +117,34 @@
         fab:menu_showShadow="true">
 
         <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/menu_item6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="startService"
+            android:src="@drawable/service1"
+            android:visibility="visible"
+            fab:fabSize="normal"
+            fab:fab_colorNormal="#00C853"
+            fab:fab_colorPressed="#00B8D4"
+            fab:fab_colorRipple="#00BFA5"
+            fab:fab_label="Start Service"
+            fab:fab_size="normal" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/menu_item7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="stopService"
+            android:src="@drawable/service1"
+            android:visibility="visible"
+            fab:fabSize="normal"
+            fab:fab_colorNormal="#00C853"
+            fab:fab_colorPressed="#00B8D4"
+            fab:fab_colorRipple="#00BFA5"
+            fab:fab_label="Stop Service"
+            fab:fab_size="normal" />
+
+        <com.github.clans.fab.FloatingActionButton
             android:id="@+id/menu_item5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
